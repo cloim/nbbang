@@ -1,98 +1,58 @@
-import { useState, type FormEvent } from 'react'
-import { supabase } from '../lib/supabase'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { errorMessage } from '../lib/errors'
+
+type GoogleCredential = { credential: string }
+type GoogleIdentity = { accounts: { id: { initialize: (options: { client_id: string; callback: (response: GoogleCredential) => void }) => void; renderButton: (element: HTMLElement, options: Record<string, unknown>) => void } } }
+declare global { interface Window { google?: GoogleIdentity } }
 
 export default function LoginPage() {
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
-  const [busy, setBusy] = useState(false)
+  const [clientId, setClientId] = useState('')
+    const [busy, setBusy] = useState(false)
+  const [button, setButton] = useState<HTMLDivElement | null>(null)
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    setError('')
-    setNotice('')
+  useEffect(() => {
+    fetch('/api/config').then((response) => response.json()).then((config) => setClientId(config.googleClientId || '')).catch(() => setClientId(''))
+  }, [])
+
+  useEffect(() => {
+    if (!clientId || !button) return
+    const render = () => {
+      if (!window.google) return
+      button.replaceChildren()
+      window.google.accounts.id.renderButton(button, { theme: 'outline', size: 'large', text: 'signin_with', shape: 'rectangular', width: Math.min(320, button.clientWidth) })
+    }
+    const observer = new ResizeObserver(render)
+    observer.observe(button)
+    if (window.google) { window.google.accounts.id.initialize({ client_id: clientId, callback: ({ credential }) => void login(credential) }); render(); return () => observer.disconnect() }
+    const script = document.createElement('script')
+    script.src = 'https://accounts.google.com/gsi/client'
+    script.async = true
+    script.onload = () => { window.google?.accounts.id.initialize({ client_id: clientId, callback: ({ credential }) => void login(credential) }); render() }
+    document.head.append(script)
+    return () => { observer.disconnect(); script.remove() }
+  }, [clientId, button])
+
+  async function login(credential: string) {
     setBusy(true)
     try {
-      if (mode === 'signin') {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
-      } else {
-        const { data, error } = await supabase.auth.signUp({ email, password })
-        if (error) throw error
-        if (!data.session) {
-          setNotice('가입 확인 메일을 보냈습니다. 메일함을 확인해주세요.')
-        }
-      }
-    } catch (err) {
-      setError(toKoreanAuthError(err))
-    } finally {
-      setBusy(false)
-    }
+      const response = await fetch('/api/auth/google', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ credential }) })
+      if (!response.ok) { const body = await response.json(); throw new Error(body.error || 'Google 로그인을 완료하지 못했습니다.') }
+      window.dispatchEvent(new Event('nbbang-auth'))
+      window.location.assign('/')
+    } catch (err) { toast.error(errorMessage(err)) }
+    finally { setBusy(false) }
   }
 
-  return (
-    <div className="page center-page">
-      <form className="card auth-card" onSubmit={handleSubmit}>
-        <h1 className="brand">
-          nBBang <span className="brand-sub">모임 정산</span>
-        </h1>
-        <label>
-          이메일
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-            required
-          />
-        </label>
-        <label>
-          비밀번호
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-            minLength={6}
-            required
-          />
-        </label>
-        {error && <p className="error-text">{error}</p>}
-        {notice && <p className="notice-text">{notice}</p>}
-        <button className="btn primary" type="submit" disabled={busy}>
-          {busy ? '처리 중…' : mode === 'signin' ? '로그인' : '회원가입'}
-        </button>
-        <button
-          className="btn ghost"
-          type="button"
-          onClick={() => {
-            setMode(mode === 'signin' ? 'signup' : 'signin')
-            setError('')
-            setNotice('')
-          }}
-        >
-          {mode === 'signin' ? '계정이 없나요? 회원가입' : '이미 계정이 있나요? 로그인'}
-        </button>
-      </form>
+  return <main className="grid min-h-dvh place-items-center px-4">
+    <div className="flex w-full max-w-sm flex-col items-center gap-6 py-6">
+      <div className="flex items-center justify-center gap-3">
+        <img className="size-16" src="/nbbang-logo.png" alt="" />
+        <img className="h-20 w-auto" src="/nbbang-title.png" alt="엔빵, 총무의 비밀" />
+      </div>
+      <div className="flex min-h-12 w-full justify-center" ref={setButton} aria-busy={busy} />
+      {!clientId && <p className="m-0 text-center text-sm text-muted">Google 로그인 설정을 불러오지 못했어요. 잠시 후 새로고침해 주세요.</p>}
+      {busy && <p className="m-0 text-sm text-muted" role="status">로그인 중이에요.</p>}
     </div>
-  )
-}
-
-function toKoreanAuthError(err: unknown): string {
-  const message = err instanceof Error ? err.message : String(err)
-  if (message.includes('Invalid login credentials')) {
-    return '이메일 또는 비밀번호가 올바르지 않습니다.'
-  }
-  if (message.includes('already registered')) {
-    return '이미 가입된 이메일입니다.'
-  }
-  if (message.includes('Password should be')) {
-    return '비밀번호는 6자 이상이어야 합니다.'
-  }
-  if (message.includes('Email not confirmed')) {
-    return '이메일 인증이 완료되지 않았습니다. 메일함을 확인해주세요.'
-  }
-  return message
+  </main>
 }
