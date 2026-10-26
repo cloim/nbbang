@@ -39,11 +39,11 @@ export default function GroupsPage() {
   const linkClass = 'flex min-h-16 min-w-0 flex-1 flex-col justify-center gap-0.5 rounded-xl px-4 py-3 focus-visible:outline-2 focus-visible:outline-focus'
 
   return <>
-    <TopBar title="모임" subtitle="모임과 일회성 만남을 관리해요" />
+    <TopBar title="모임" subtitle="모임과 모임 외 만남을 관리해요" />
     <div className="flex-none px-4 pt-4 lg:px-8">
       <div className={`${tabList} max-w-xl`} role="tablist" aria-label="모임 목록">
         <button type="button" role="tab" aria-selected={tab === 'groups'} className={tabClass(tab === 'groups')} onClick={() => setTab('groups')}>모임 <span className="text-sm text-accent">{groups.length}</span></button>
-        <button type="button" role="tab" aria-selected={tab === 'oneOffs'} className={tabClass(tab === 'oneOffs')} onClick={() => setTab('oneOffs')}>일회성 만남 <span className="text-sm text-accent">{oneOffs.length}</span></button>
+        <button type="button" role="tab" aria-selected={tab === 'oneOffs'} className={tabClass(tab === 'oneOffs')} onClick={() => setTab('oneOffs')}>모임 외 만남 <span className="text-sm text-accent">{oneOffs.length}</span></button>
       </div>
     </div>
     <main className="scroll-quiet min-h-0 flex-1 px-4 py-4 lg:px-8">
@@ -62,7 +62,7 @@ export default function GroupsPage() {
             </Link>
             <IconButton label={`${meeting.title} 삭제`} className={deleteIconButton} onClick={() => setPendingMeeting(meeting)}><Trash2 size={18} aria-hidden="true" /></IconButton>
           </li>)}
-        </ul> : <p className="m-0 rounded-2xl border border-dashed border-line px-4 py-5 text-center text-sm text-muted">일회성 만남이 여기에 보여요.</p>}
+        </ul> : <p className="m-0 rounded-2xl border border-dashed border-line px-4 py-5 text-center text-sm text-muted">모임 외 만남이 여기에 보여요.</p>}
     </main>
     {pendingMeeting && <ConfirmModal title="만남 삭제" message={`'${pendingMeeting.title}' 만남과 지출 기록을 삭제할까요?`} onConfirm={() => removeMeeting(pendingMeeting)} onClose={() => setPendingMeeting(null)} />}
   </>

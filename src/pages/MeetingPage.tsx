@@ -69,7 +69,7 @@ export default function MeetingPage() {
 
   const crumbs: Crumb[] = meeting?.group_id
     ? [{ label: '모임', to: '/groups' }, { label: parentGroup?.name ?? '모임', to: `/g/${meeting.group_id}` }, { label: meeting.title }]
-    : [{ label: '일회성 만남', to: '/groups', state: { tab: 'oneOffs' } }, { label: meeting?.title ?? (loading ? '불러오는 중' : '만남 없음') }]
+    : [{ label: '모임 외 만남', to: '/groups', state: { tab: 'oneOffs' } }, { label: meeting?.title ?? (loading ? '불러오는 중' : '만남 없음') }]
 
   if (loading) return <>
     <TopBar crumbs={crumbs} />

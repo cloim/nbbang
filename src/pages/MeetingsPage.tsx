@@ -39,7 +39,7 @@ export default function MeetingsPage() {
         {/* 두 생성 버튼은 좁은 화면에서도 한 줄에 둔다. 공간이 부족하면 아이콘을 먼저 숨긴다. */}
         <div className="grid grid-cols-2 gap-2.5">
           <button type="button" className={button.primary} onClick={() => setForm('group')}><Plus size={18} aria-hidden="true" className="hidden min-[400px]:block" />모임 만들기</button>
-          <button type="button" className={button.secondary} onClick={() => setForm('once')}><Zap size={18} aria-hidden="true" className="hidden min-[400px]:block" />일회성 만남 만들기</button>
+          <button type="button" className={button.secondary} onClick={() => setForm('once')}><Zap size={18} aria-hidden="true" className="hidden min-[400px]:block" />모임 외 만남 만들기</button>
         </div>
 
         <section aria-labelledby="recent-heading" className="flex flex-col gap-3">
@@ -52,7 +52,7 @@ export default function MeetingsPage() {
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <span className="truncate font-bold text-ink">{meeting.title}</span>
                   <span className="truncate text-sm text-muted">
-                    {meeting.group_id ? groupName.get(meeting.group_id) ?? '모임' : '일회성 만남'} | {new Date(meeting.created_at).toLocaleDateString('ko-KR')}
+                    {meeting.group_id ? groupName.get(meeting.group_id) ?? '모임' : '모임 외 만남'} | {new Date(meeting.created_at).toLocaleDateString('ko-KR')}
                   </span>
                 </span>
                 <ChevronRight size={20} className="shrink-0 text-muted" aria-hidden="true" />
@@ -101,7 +101,7 @@ function CreateModal({ kind, onClose, onCreated }: { kind: CreateKind; onClose: 
     isOpen
     size="sm"
     draggable={false}
-    title={kind === 'group' ? '새 모임' : '일회성 만남'}
+    title={kind === 'group' ? '새 모임' : '모임 외 만남'}
     initialFocusRef={inputRef}
     onClose={() => { if (!busy) onClose() }}
     footer={<>
