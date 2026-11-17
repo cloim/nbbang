@@ -16,25 +16,38 @@ React, Vite, TypeScript, Express, PostgreSQL 17, Docker Compose
 
 ## 로컬 실행
 
-1. Docker Desktop과 Node.js 22 이상을 설치합니다.
-2. `.env.example`을 참고해 `.env.local`을 만들고 `POSTGRES_PASSWORD`와 `GOOGLE_CLIENT_ID`를 설정합니다. 서버가 PostgreSQL 접속 주소를 `POSTGRES_PASSWORD`에서 구성합니다. `DATABASE_URL`을 지정하면 그 값을 우선 사용합니다.
-3. 전용 PostgreSQL 컨테이너를 생성하고 실행합니다.
+1. Docker Compose를 지원하는 컨테이너 엔진을 준비합니다.
+2. `.env.example`을 참고해 `.env.local`을 만들고 `POSTGRES_PASSWORD`와 `GOOGLE_CLIENT_ID`를 설정합니다.
+3. 웹, API와 PostgreSQL을 `nbbang` Compose 프로젝트로 빌드하고 실행합니다.
 
    ```powershell
-   docker compose --env-file .env.local up -d db
+   docker compose --env-file .env.local up -d --build --wait
    ```
 
-4. 의존성을 설치하고 개발 서버와 API를 각각 실행합니다.
+4. `http://127.0.0.1:47420`에 접속합니다.
 
-   ```powershell
-   npm install
-   npm run dev:api
-   npm run dev
-   ```
+| 서비스 | 역할 | 로컬 주소 |
+| --- | --- | --- |
+| web | Nginx, 프런트엔드 빌드와 `/api` 프록시 | `http://127.0.0.1:47420` |
+| api | Express API | `http://127.0.0.1:47422/api/health` |
+| db | PostgreSQL 17 | `127.0.0.1:47430` |
 
-5. `http://127.0.0.1:47420`에 접속합니다.
+DB, API와 웹 순서로 헬스체크를 통과한 뒤 시작합니다. 각 서비스는 컨테이너 엔진 재시작 후 자동으로 실행됩니다. 프런트엔드를 포함한 소스 변경은 위 빌드 명령으로 반영합니다. 컨테이너 관리 도구에는 이 폴더의 `compose.yaml`과 환경 파일 `.env.local`을 함께 등록합니다.
 
-운영 서버는 `npm run build` 후 `npm start`로 실행합니다. Docker 데이터는 `nbbang_postgres_data` 볼륨에 저장됩니다.
+```powershell
+docker compose --env-file .env.local ps
+docker compose --env-file .env.local logs --tail 100
+docker compose --env-file .env.local stop
+docker compose --env-file .env.local up -d --wait
+```
+
+기존 DB 데이터는 `nbbang_nbbang_postgres_data` 볼륨을 그대로 사용합니다. `down`은 컨테이너와 네트워크를 제거하고 볼륨을 유지합니다. `down -v`는 저장된 데이터까지 삭제하므로 데이터 초기화가 필요할 때만 사용합니다.
+
+## 프런트엔드 개발
+
+Node.js 22 이상을 설치하고 `npm ci` 후 `npm run dev`를 실행합니다. 개발 화면은 `http://127.0.0.1:47421`에서 제공하며 소스 변경을 즉시 반영합니다. `/api` 요청은 `127.0.0.1:47422`의 API 컨테이너로 전달합니다. Compose의 웹 화면 `47420`과 개발 화면 `47421`을 함께 사용할 수 있습니다.
+
+컨테이너 API는 내부 서비스 주소 `db:5432`를 사용합니다. 호스트에서 API를 직접 개발할 때는 API 컨테이너를 중지한 후 `npm run dev:api`로 `47422` 포트에서 실행합니다. 호스트 실행 시 `POSTGRES_HOST`의 기본값은 `127.0.0.1`, `POSTGRES_PORT`는 `47430`이며, `DATABASE_URL`을 지정하면 그 값을 우선합니다.
 
 ## Google 로그인
 
