@@ -1,0 +1,13 @@
+.git
+.env
+.env.*
+node_modules
+dist
+dist-ssr
+docs
+logs
+*.log
+smoke-shots
+.vscode
+.idea
+%programdata%

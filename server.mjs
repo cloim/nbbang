@@ -16,8 +16,9 @@ const databaseUrl = process.env.DATABASE_URL || (() => {
   const user = encodeURIComponent(process.env.POSTGRES_USER || 'nbbang')
   const password = encodeURIComponent(process.env.POSTGRES_PASSWORD || '')
   const database = encodeURIComponent(process.env.POSTGRES_DB || 'nbbang')
+  const host = process.env.POSTGRES_HOST || '127.0.0.1'
   const port = Number(process.env.POSTGRES_PORT || 47430)
-  return password ? `postgres://${user}:${password}@127.0.0.1:${port}/${database}` : undefined
+  return password ? `postgres://${user}:${password}@${host}:${port}/${database}` : undefined
 })()
 const pool = new Pool({ connectionString: databaseUrl })
 const google = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
