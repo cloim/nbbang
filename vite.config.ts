@@ -7,14 +7,14 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     host: '127.0.0.1',
-    port: 47420,
+    port: 47421,
     strictPort: true,
     allowedHosts: true,
-    proxy: { '/api': 'http://127.0.0.1:47421' },
+    proxy: { '/api': 'http://127.0.0.1:47422' },
   },
   preview: {
     host: '127.0.0.1',
-    port: 47420,
+    port: 47421,
     strictPort: true,
     allowedHosts: true,
   },

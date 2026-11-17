@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:api": "node -e \"process.env.PORT='47421';process.env.NODE_ENV='development';import('./server.mjs')\"",
+    "dev:api": "node -e \"process.env.PORT='47422';process.env.NODE_ENV='development';import('./server.mjs')\"",
     "start": "node server.mjs",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
